@@ -69,18 +69,53 @@ myWorld.add_set_listener( set_listener )
 @app.route('/')
 def hello():
     '''Return something coherent here.. perhaps redirect to /static/index.html '''
-    return None
+    return flask.redirect("/static/index.html")
 
-def read_ws(ws,client):
+
+def read_ws(ws, client):
     '''A greenlet function that reads from the websocket and updates the world'''
     # XXX: TODO IMPLEMENT ME
-    return None
+    try:
+        while True:
+            msg = ws.receive()
+            if msg is not None:
+                data = json.loads(msg)
+                for entity, updates in data.items():
+                    for key, value in updates.items():
+                        myWorld.update(entity, key, value)
+            else:
+                break
+    except Exception as e:
+        print(f"Error in read_ws: {e}")
+    finally:
+        ws.close()
+        client.put(None)
 
+    return None
 @sockets.route('/subscribe')
 def subscribe_socket(ws):
-    '''Fufill the websocket URL of /subscribe, every update notify the
+    '''Fulfill the websocket URL of /subscribe, every update notify the
        websocket and read updates from the websocket '''
-    # XXX: TODO IMPLEMENT ME
+    # Create a client queue and add it to the world's listeners
+    client_queue = queue.Queue()
+    myWorld.add_set_listener(client_queue.put)
+
+    # Start the greenlet to read from the websocket
+    g = gevent.spawn(read_ws, ws, client_queue)
+
+    try:
+        while True:
+            msg = client_queue.get()
+            if msg is None:
+                break
+            ws.send(json.dumps({msg[0]: msg[1]}))
+    except Exception as e:
+        print(f"Error in subscribe_socket: {e}")
+    finally:
+        # Remove the client queue from the world's listeners and kill the greenlet
+        myWorld.listeners.remove(client_queue.put)
+        gevent.kill(g)
+
     return None
 
 
@@ -99,23 +134,26 @@ def flask_post_json():
 @app.route("/entity/<entity>", methods=['POST','PUT'])
 def update(entity):
     '''update the entities via this interface'''
-    return None
+    data = flask_post_json()
+    myWorld.set(entity, data)
+    return data
 
 @app.route("/world", methods=['POST','GET'])    
 def world():
     '''you should probably return the world here'''
-    return None
+    return myWorld.world()
 
 @app.route("/entity/<entity>")    
 def get_entity(entity):
     '''This is the GET version of the entity interface, return a representation of the entity'''
-    return None
+    return myWorld.get(entity)
 
 
 @app.route("/clear", methods=['POST','GET'])
 def clear():
     '''Clear the world out!'''
-    return None
+    myWorld.clear()
+    return myWorld.world()
 
 
 
