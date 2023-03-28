@@ -69,6 +69,8 @@ class WorldClient(WebSocketClient):
         w = json.loads(utf8(m.data))
         kcnt = 0
         for key in w:
+            #print data
+            print("RECV %s %s %s" % (self.name,key,w[key]))
             if (key in world):
                 assert world[key] == w[key]
             world[key] = w[key]
