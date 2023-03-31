@@ -65,7 +65,8 @@ class WorldClient(WebSocketClient):
         print(("Closed down %s " % self.name, code, reason))
 
     def receive_my_message(self,m):
-      #  w = json.loads(utf8(m.data))
+        print("RECV %s " % m)
+        w = json.loads(utf8(m.data))
         kcnt = 0
         for key in w:
             #print data
