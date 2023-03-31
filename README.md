@@ -18,7 +18,6 @@ pip install -r requirements.txt
 ```
 
 Contributors / Licensing
-guoqiaoxi  CHATGPT
 ========================
 
 Generally everything is LICENSE'D under the Apache 2 license by Abram Hindle.
