@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width" />
     <meta name="license" content="
         Copyright 2013 Google, Abram Hindle
-        
+        guoqiaoxi
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
         You may obtain a copy of the License at
@@ -54,7 +54,7 @@ function drawCircle(context,entity) {
         //moveTo(x,y);
         fillStyle = entity["colour"];
         strokeStyle = fillStyle;
-        arc(x, y, (entity["radius"])?entity["radius"]:10, 0, 2.0 * Math.PI, false);  
+        arc(x, y, (entity["radius"])?entity["radius"]:40, 0, 2.0  * Math.PI, false);  
         stroke();                                
     }
 }
@@ -239,13 +239,61 @@ mouse.mouseuppers.push(function(x,y,clicked,e) {
 });
 
 mouse.mousedraggers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'green',
+    addEntityWithoutName({'x':x,'y':y,'colour':'purple',
                           'radius':10});
 });
 
 
 function update() {
     drawFrame();
+}
+function sendJSONRequest(url, objects, callback) {
+    const xhr = createJSONRequest(callback);
+    xhr.open("POST", url, true);
+    setJSONRequestHeaders(xhr);
+    xhr.send(JSON.stringify(objects));
+}
+
+function createJSONRequest(callback) {
+    const xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function () {
+        handleRequestStateChange(xhr, callback);
+    };
+    return xhr;
+}
+
+function handleRequestStateChange(xhr, callback) {
+    if (xhr.readyState === 4) {
+        try {
+            if (xhr.status === 200) {
+                const data = JSON.parse(xhr.responseText);
+                callback(data);
+            }
+        } catch (e) {
+            alert('Error: ' + e.name);
+        }
+    }
+}
+
+function setJSONRequestHeaders(xhr) {
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.setRequestHeader('Accept', 'application/json');
+}
+
+function callback(data) {
+    Object.assign(world, data);
+    drawNextFrame();
+}
+function handleMessage(msg) {
+    const message = JSON.parse(msg.data);
+    updateWorldFromMessage(message);
+    drawNextFrame();
+}
+
+function updateWorldFromMessage(message) {
+    for (const m in message) {
+        world[m] = message[m];
+    }
 }
 
 
@@ -254,6 +302,8 @@ function wsSetup() {
     socket = new WebSocket(url);
     socket.onopen = function() {
         //XXX: TODO What are you going to do here?
+        console.log("Connection ongoing");
+        sendJSONXMLHTTPRequest('http://' + host + '/world', null, callback);
     };
     socket.onerror = function(msg) {
         debug("WebSocket Error:" + msg.data);
@@ -261,7 +311,9 @@ function wsSetup() {
     socket.onmessage = function(msg) {  
         try {
             debug("WebSocket Recv:" + msg.data);
-            //XXX: TODO What are you going to do here?            
+            //XXX: TODO What are you going to do here?       
+            handleMessage(msg);
+                 
         } catch (e) {
             alert("socket on message: " + e);
         }
