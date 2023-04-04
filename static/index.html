@@ -298,6 +298,7 @@ function wsSetup() {
         try {
             debug("WebSocket Recv:" + msg.data);
             //XXX: TODO What are you going to do here?            
+             //socket.onmessage event handler that processes and updates the received data
             var message = JSON.parse(msg.data);
  			for (m in message) {
  				world[m] = message[m];
