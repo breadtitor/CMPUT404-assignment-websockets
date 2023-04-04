@@ -271,7 +271,7 @@ mouse.mousedowners.push(function(x,y,clicked,e) {
 mouse.mouseuppers.push(function(x,y,clicked,e) {
     addEntityWithoutName({'x':x,'y':y,'colour':'red'});
 });
-
+//change the color to purple when the mouse is dragged
 mouse.mousedraggers.push(function(x,y,clicked,e) {
     addEntityWithoutName({'x':x,'y':y,'colour':'purple',
                           'radius':15});
